@@ -3,7 +3,6 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
-    
 		<title><lift:Menu.title /></title>
     <script id="jquery" src="/classpath/jquery.js" type="text/javascript"/>
     <script id="json" src="/classpath/json.js" type="text/javascript"/>
@@ -25,6 +24,7 @@
           <form class="navbar-search pull-left" action="">
             <input type="text" class="search-query span2" placeholder="Search"> </input>
           </form>
+          <lift:Menu.builder linkToSelf="true" group="admin" ul:class="nav pull-right" li:class="btn-warning" li_item:class="active" />
           <lift:Menu.builder linkToSelf="true" group="user" ul:class="nav pull-right" li_item:class="active" />
         </div><!-- /.nav-collapse -->
       </div>
