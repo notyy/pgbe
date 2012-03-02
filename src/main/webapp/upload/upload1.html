@@ -1,0 +1,18 @@
+<lift:surround with="default" at="content">
+  <lift:comments>
+    <div class="span2">  <!-- 占位 -->
+      <h3>占位</h3>
+    </div>
+	<div class="span8" style="margin-top:40px">
+      <h3>第五天。2012年3月2日</h3>
+      <p>今天本来计划写篇关于view的博客，可惜学习难度比预料为高，未能完成，预期明天能OK</p>
+      <p>本页面的评论Ajax链接是用一个包围全部内容的snippet，通过css selector选择所有"p"类型的html标签，然后动态生成的表单。在允许用户自己上传自己在本机编辑的完全自由的html的情况下，如何实现段落式评论？</p>
+      <p>再尚未实现持久化模块前，暂时先用一个全局的map作为存储演示一下段落式评论想要达到的效果</p>
+	  <p>当前版本没有做任何防御式设计，所以请温柔的试用。。。用户名和内容都不要为空，也不乱写乱七八糟东西，谢谢了。。。</p>
+	</div>
+	<div class="span2" style="display:none">  <!-- 占位 -->
+      <h3>占位</h3>
+    </div>
+  </lift:comments>
+</lift:surround>
+

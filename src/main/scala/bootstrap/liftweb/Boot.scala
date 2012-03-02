@@ -1,16 +1,18 @@
 package bootstrap.liftweb
 
 import net.liftweb._
-import http.{ LiftRules, NotFoundAsTemplate, ParsePath }
-import sitemap.{ SiteMap, Menu, Loc }
+import sitemap._
 import Loc._
 import util.{ NamedPF }
 import http._
+import net.liftweb.common.Full
+import net.liftweb.http.{ LiftRules, StrictXHTML1_0Validator }
 
 class Boot {
   def boot {
     // where to search snippet
     LiftRules.addToPackages("pgbe")
+    //LiftRules.xhtmlValidator = Full(StrictXHTML1_0Validator)
 
     // build sitemap
     val entries = List(
@@ -25,6 +27,7 @@ class Boot {
       //---------------------------------------------------------------
       Menu("register", "注册") / "register" >> LocGroup("user"),
       Menu("login", "登录") / "login" >> LocGroup("user"),
+      Menu("read", "阅读") / "upload" / ** >> LocGroup("user") >> Hidden,
       //---------------------------------------------------------------
       Menu("Admin", "管理") / "admin" >> LocGroup("admin") submenus (
         Menu("ArticleListAdmin", "文章列表") / "admin" / "articleList",
