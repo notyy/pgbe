@@ -66,7 +66,7 @@ class Comments extends Logger {
   }
 
   def loginBlock(eId: Int): NodeSeq = {
-    val callBack = "http://kaopua.com/pgbe" + pageId + "?state=" + ppId(eId)
+    val callBack = "http://kaopua.com/pgbe" + pageId + "?state=test" //+ ppId(eId)
     info("回调地址为：" + callBack)
     val requestAuthUrl = new URI(QQService.requestAuthUrl(callBack))
     <div><h4 class="alert alert-info">您必须登录后才能评论，本小站无力维护密码安全，请点击下面图标使用大公司的登录服务</h4></div>
