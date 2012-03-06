@@ -86,7 +86,7 @@ class Comments extends Logger {
 
   def loginBlock(eId: Int): NodeSeq = {
     val hostDomain = Config.hostDomain.openOr("")
-    val callBack = hostDomain + pageUrl + "?state=" + ppId(eId)
+    val callBack = hostDomain + pageUrl + "?state=test" // + ppId(eId)
     info("requesting authurl-------callback=\n" + callBack)
     val requestAuthUrl = new URI(QQService.requestAuthUrl(callBack))
     <div><h4 class="alert alert-info">您必须登录后才能评论，本小站无力维护密码安全，请点击下面图标使用大公司的登录服务</h4></div>
