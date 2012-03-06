@@ -27,6 +27,7 @@ import pgbe.util.QQService
 import java.net.URI
 import pgbe.util.Config
 import net.liftweb.common.Full
+import net.liftweb.json._
 
 object userVar extends SessionVar[Box[User]](Empty)
 
@@ -48,9 +49,12 @@ class Comments extends Logger {
         info("requesting accessToken-----------:\n")
         val token = QQService.requestAccessToken(sCode)
         info("token received, that is-----------:\n" + token)
-        val openId = QQService.requestOpenId(token)
-        info("now, we got openId, -------------:\n" + openId)
+        val callback = QQService.requestOpenId(token)
+        info("now, we got callback of openId, -------------:\n" + callback)
+        val openId = (parse(callback.stripPrefix("callback( ").stripSuffix(" );")) \ "openid").toString()
+        info("extracted openId is:\n" + openId)
         val userInfo = QQService.requestUserInfo(token, openId)
+        info("userInfo received:\n" + userInfo)
         renderP
       }
       case _ => info("No code para, normal rendering"); renderP //暂时忽略state参数
