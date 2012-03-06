@@ -35,13 +35,14 @@ class Comments extends Logger {
   val id2Status = new scala.collection.mutable.HashMap[Int, Boolean] with SynchronizedMap[Int, Boolean]
   val pageUrl = S.uri
   val code = S.attr("code", _.toString)
-  val state = S.attr("stage", _.toString)
+  val state = S.attr("state", _.toString)
 
   def ppId(id: Int) = pageUrl + "_" + id
 
   def render = "p *+" #> { in: NodeSeq =>
     (code, state) match {
       case (Full(sCode), _) => {
+        info("requesting accessToken-----------:\n")
         val token = QQService.requestAccessToken(sCode)
         info("token received, that is-----------:\n" + token)
         val openId = QQService.requestOpenId(token)
@@ -49,7 +50,7 @@ class Comments extends Logger {
         val userInfo = QQService.requestUserInfo(token, openId)
         renderP
       }
-      case _ => renderP //暂时忽略state参数
+      case _ => info("No code para, normal rendering"); renderP //暂时忽略state参数
     }
   }
 
