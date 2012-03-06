@@ -9,30 +9,41 @@ import net.liftweb.http.SHtml._
 import net.liftweb.common.Logger
 import net.liftweb.http.js.JsCmd
 import net.liftweb.http.js.jquery.JqJsCmds.{ Show, Hide }
-import pgbe.model.CommentStack
 import java.text.SimpleDateFormat
 import pgbe.model.Comment
 import java.util.Date
 import scala.collection.mutable.SynchronizedMap
 import scala.xml.UnprefixedAttribute
 import scala.xml.Null
+import net.liftweb.http.S
+import net.liftweb.mapper.By
+import net.liftweb.mapper.OrderBy
+import net.liftweb.mapper.Ascending
+import net.liftweb.http.SessionVar
+import net.liftweb.common.Box
+import pgbe.model.User
+import net.liftweb.common.Empty
+import pgbe.util.QQService
+import java.net.URI
+
+object userVar extends SessionVar[Box[User]](Empty)
 
 class Comments extends Logger {
   var id = 0
-  val id2User = new scala.collection.mutable.HashMap[Int, String] with SynchronizedMap[Int, String]
-  val id2Content = new scala.collection.mutable.HashMap[Int, String] with SynchronizedMap[Int, String]
   val id2Status = new scala.collection.mutable.HashMap[Int, Boolean] with SynchronizedMap[Int, Boolean]
-  //  def incId: String = { id += 1; id.toString() }
+  val pageId = S.uri
 
-  private def getPreCommentsView(eId: Int): NodeSeq = {
-    val preCommentView: NodeSeq = Text("")
-    if (CommentStack.cmap.contains(eId)) {
-      val preComments = CommentStack.cmap(eId).foldLeft[NodeSeq](Text("")) {
-        (xml, comment) =>
-          xml ++ <span>{ comment.userName } 发表于 </span><span>{ comment.timeStr }</span><br/><span>{ comment.content }</span><p/>
-      }
-      <div class="well">{ preComments }</div>
-    } else Text("")
+  def ppId(id: Int) = pageId + "_" + id
+
+  def render = "p *+" #> { in: NodeSeq =>
+    id += 1
+    id2Status(id) = false
+    SHtml.a(createCommentLink(id), Text(linkCaption(id)), "id" -> ppId(id), "class" -> "btn-mini") ++ <div style="display:none" id={ "edit_" + id.toString() }/>
+  }
+
+  private def linkCaption(eId: Int) = {
+    val commentsOnPLength = Comment.findAll(By(Comment.ppId, ppId(eId)), OrderBy(Comment.createdAt, Ascending)).length
+    if (commentsOnPLength > 0) (commentsOnPLength + "条评论") else "没有评论"
   }
 
   private def createCommentLink(eId: Int): () => JsCmd = { () =>
@@ -42,36 +53,38 @@ class Comments extends Logger {
       Hide(editId, 500 millis)
     } else { //show edit form and previous submited comment
       id2Status(eId) = true
-      def createCommentBlock(eId: Int): JsCmd = {
-        SetHtml(editId,
-          getPreCommentsView(eId) ++
-            ajaxForm(
-              ajaxText("", { (userName: String) => //user name input
-                id2User(eId) = userName
-              }, "class" -> "span4", "placeholder" -> "您的名称") ++
-                ajaxTextarea("", { (content: String) => //content input
-                  id2Content(eId) = content
-                }, "id" -> (editId), "class" -> "span7", "placeholder" -> "您的意见是什么？", "rows" -> "5") ++ <br/> ++
-                ajaxSubmit("确认", { () => //submit button
-                  val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                  val comment = Comment(id2User(eId), df.format(new Date()), id2Content(eId))
-                  if (CommentStack.cmap.contains(eId)) {
-                    CommentStack.cmap(eId) = CommentStack.cmap(eId) :+ comment
-                  } else CommentStack.cmap(eId) = List(comment)
-                  createCommentBlock(eId) &
-                    SetHtml(eId.toString(), Text(linkCaption))
-                }, "class" -> "btn btn-primary", "type" -> "submit")) % new UnprefixedAttribute("class", "well", Null))
-      }
-      createCommentBlock(eId) &
+      createCommentBlock(eId, editId)() &
         Show(editId, 500 millis)
     }
   }
 
-  def linkCaption = if (CommentStack.cmap.contains(id)) CommentStack.cmap(id).length + "条评论" else "没有评论"
-
-  def render = "p *+" #> { in: NodeSeq =>
-    id += 1
-    id2Status(id) = false
-    SHtml.a(createCommentLink(id), Text(linkCaption), "id" -> id.toString(), "class" -> "btn btn-mini") ++ <div style="display:none" id={ "edit_" + id.toString() }/>
+  def createCommentBlock(eId: Int, editId: String): () => JsCmd = { () =>
+    SetHtml(editId,
+      getOldCommentsView(eId) ++
+        (if (userVar.isEmpty) loginBlock(eId) else new CommentScreen(eId.toString(), createCommentBlock(eId, editId)).toForm)) &
+      SetHtml(ppId(eId).toString(), Text(linkCaption(eId)))
   }
+
+  def loginBlock(eId: Int): NodeSeq = {
+    val callBack = "http://kaopua.com/pgbe" + pageId + "?state=" + ppId(eId)
+    info("回调地址为：" + callBack)
+    val requestAuthUrl = new URI(QQService.requestAuthUrl(callBack))
+    <div><h4 class="alert alert-info">您必须登录后才能评论，本小站无力维护密码安全，请点击下面图标使用大公司的登录服务</h4></div>
+    <div><span id="qqLoginBtn"></span><a href={ requestAuthUrl.toString() }><img src="../imgs/QQ_Connect_logo_7.png" alt="QQ登录 "/></a></div>
+  }
+
+  private def getOldCommentsView(eId: => Int): NodeSeq = {
+    val commentsOnP = Comment.findAll(By(Comment.ppId, eId.toString()), OrderBy(Comment.createdAt, Ascending))
+    val preCommentView: NodeSeq = Text("")
+    val df = new SimpleDateFormat("yyyy年 MM月 dd日 HH时 mm分 ss秒")
+    if (commentsOnP.isEmpty) Text("")
+    else {
+      val preComments = commentsOnP.foldLeft[NodeSeq](Text("")) {
+        (xml, comment) =>
+          xml ++ <span>{ comment.author } 发表于 </span><span>{ df.format(comment.createdAt.is) }</span><br/><span>{ comment.content }</span><p/>
+      }
+      <div id={ "old_" + eId } class="well">{ preComments }</div>
+    }
+  }
+
 }

@@ -1,9 +1,14 @@
 <lift:surround with="default" at="content">
-  <lift:comments>
+  <lift:comments pageId="upload1">
     <div class="span2">  <!-- 占位 -->
       <h3>占位</h3>
     </div>
 	<div class="span8" style="margin-top:40px">
+	  <lift:Msgs showAll="false">
+	    <lift:notice_class>alert alert-success</lift:notice_class>
+	    <lift:warning_class>alert</lift:warning_class>
+	    <lift:error_class>alert alert-error</lift:error_class> 
+	  </lift:Msgs>
       <h3>第五天。2012年3月2日</h3>
       <p>今天本来计划写篇关于view的博客，可惜学习难度比预料为高，未能完成，预期明天能OK</p>
       <p>本页面的评论Ajax链接是用一个包围全部内容的snippet，通过css selector选择所有"p"类型的html标签，然后动态生成的表单。在允许用户自己上传自己在本机编辑的完全自由的html的情况下，如何实现段落式评论？</p>
@@ -15,4 +20,3 @@
     </div>
   </lift:comments>
 </lift:surround>
-

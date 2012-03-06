@@ -7,9 +7,19 @@ import util.{ NamedPF }
 import http._
 import net.liftweb.common.Full
 import net.liftweb.http.{ LiftRules, StrictXHTML1_0Validator }
+import net.liftweb.db.StandardDBVendor
+import net.liftweb.util.Props
+import net.liftweb.mapper.DB
+import net.liftweb.db.DefaultConnectionIdentifier
+import net.liftweb.common.Logger
+import net.liftweb.mapper.Schemifier
+import net.liftweb.util.Helpers._
+import pgbe.model.Comment
+import pgbe.util.Config
 
-class Boot {
+class Boot extends Logger {
   def boot {
+    info("booting in mode:" + Props.mode)
     // where to search snippet
     LiftRules.addToPackages("pgbe")
     //LiftRules.xhtmlValidator = Full(StrictXHTML1_0Validator)
@@ -28,6 +38,7 @@ class Boot {
       Menu("register", "注册") / "register" >> LocGroup("user"),
       Menu("login", "登录") / "login" >> LocGroup("user"),
       Menu("read", "阅读") / "upload" / ** >> LocGroup("user") >> Hidden,
+      Menu("imgs", "图片") / "imgs" / ** >> LocGroup("static") >> Hidden,
       //---------------------------------------------------------------
       Menu("Admin", "管理") / "admin" >> LocGroup("admin") submenus (
         Menu("ArticleListAdmin", "文章列表") / "admin" / "articleList",
@@ -42,5 +53,33 @@ class Boot {
 
     // set character encoding
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
+
+    //connecting database
+    if (!DB.jndiJdbcConnAvailable_?) {
+      DB.defineConnectionManager(
+        DefaultConnectionIdentifier, DBVendor)
+      LiftRules.unloadHooks.append(() =>
+        DBVendor.closeAllConnections_!())
+    }
+
+    //schemify
+    if (Props.devMode)
+      Schemifier.schemify(true, Schemifier.infoF _,
+        Comment)
+
+    //set some config values
+    Config.qqApiKey = Props.get("QQ.apiKey")
+    Config.qqApiScret = Props.get("QQ.apiSecret")
+    Config.hostDomain = Props.get("host.domain")
+
+    //some styling
+    LiftRules.noticesAutoFadeOut.default.set(
+      (notices: NoticeType.Value) => Full(2 seconds, 2 seconds))
   }
+
+  object DBVendor extends StandardDBVendor(
+    Props.get("db.class").openOr("org.h2.Driver"),
+    Props.get("db.url").openOr("jdbc:h2:~/database/pgbe"),
+    Props.get("db.user"), Props.get("db.pass"))
+
 }
