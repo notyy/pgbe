@@ -25,6 +25,7 @@ import pgbe.model.User
 import net.liftweb.common.Empty
 import pgbe.util.QQService
 import java.net.URI
+import pgbe.util.Config
 
 object userVar extends SessionVar[Box[User]](Empty)
 
@@ -66,9 +67,12 @@ class Comments extends Logger {
   }
 
   def loginBlock(eId: Int): NodeSeq = {
-    val callBack = "http://kaopua.com/pgbe" + pageId + "?state=test" //+ ppId(eId)
+    val callBack = "http://kaopua.com" + pageId + "?state=test" //+ ppId(eId)
     info("回调地址为：" + callBack)
-    val requestAuthUrl = new URI(QQService.requestAuthUrl(callBack))
+    val qqApiKey = Config.qqApiKey.openOr("")
+    val qqApiSecret = Config.qqApiScret.openOr("")
+    val requestAuthUrl = new URI(QQService.requestAuthUrl(qqApiKey, qqApiSecret, callBack))
+    info("requestAuthUrl=" + requestAuthUrl)
     <div><h4 class="alert alert-info">您必须登录后才能评论，本小站无力维护密码安全，请点击下面图标使用大公司的登录服务</h4></div>
     <div><span id="qqLoginBtn"></span><a href={ requestAuthUrl.toString() }><img src="../imgs/QQ_Connect_logo_7.png" alt="QQ登录 "/></a></div>
   }
