@@ -34,8 +34,8 @@ class Comments extends Logger {
   var id = 0
   val id2Status = new scala.collection.mutable.HashMap[Int, Boolean] with SynchronizedMap[Int, Boolean]
   val pageUrl = S.uri
-  val code = S.attr("code", _.toString)
-  val state = S.attr("state", _.toString)
+  val code = S.param("code")
+  val state = S.param("state")
 
   def ppId(id: Int) = pageUrl + "_" + id
 
