@@ -85,10 +85,9 @@ class Comments extends Logger {
   }
 
   def loginBlock(eId: Int): NodeSeq = {
-    val qqApiKey = Config.qqApiKey.openOr("")
-    val qqApiSecret = Config.qqApiScret.openOr("")
     val hostDomain = Config.hostDomain.openOr("")
     val callBack = hostDomain + pageUrl + "?state=" + ppId(eId)
+    info("requesting authurl-------callback=\n" + callBack)
     val requestAuthUrl = new URI(QQService.requestAuthUrl(callBack))
     <div><h4 class="alert alert-info">您必须登录后才能评论，本小站无力维护密码安全，请点击下面图标使用大公司的登录服务</h4></div>
     <div><span id="qqLoginBtn"></span><a href={ requestAuthUrl.toString() }><img src="../imgs/QQ_Connect_logo_7.png" alt="QQ登录 "/></a></div>
