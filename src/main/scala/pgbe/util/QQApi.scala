@@ -8,7 +8,7 @@ class QQApi extends DefaultApi20 {
   private val AUTHORIZE_URL = "https://graph.qq.com/oauth2.0/authorize?client_id=%s&redirect_uri=%s&response_type=code" //&state=%s
   private val SCOPED_AUTHORIZE_URL = AUTHORIZE_URL + "&scope=%s"
 
-  def getAccessTokenEndpoint(): String = "https://graph.qq.com/oauth2.0/token"
+  def getAccessTokenEndpoint(): String = "https://graph.qq.com/oauth2.0/token?grant_type=authorization_code"
 
   def getAuthorizationUrl(config: OAuthConfig): String = {
     Preconditions.checkValidUrl(config.getCallback(), "Must provide a valid url as callback. QQ requires it");
