@@ -5,7 +5,7 @@ import org.scribe.utils.Preconditions
 import org.scribe.utils.OAuthEncoder
 
 class QQApi extends DefaultApi20 {
-  private val AUTHORIZE_URL = "https://graph.qq.com/oauth2.0/authorize?client_id=%s&redirect_uri=%s" //&state=%s
+  private val AUTHORIZE_URL = "https://graph.qq.com/oauth2.0/authorize?client_id=%s&redirect_uri=%s&response_type=code" //&state=%s
   private val SCOPED_AUTHORIZE_URL = AUTHORIZE_URL + "&scope=%s"
 
   def getAccessTokenEndpoint(): String = "https://graph.qq.com/oauth2.0/token"
