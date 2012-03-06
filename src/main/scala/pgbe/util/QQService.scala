@@ -14,10 +14,14 @@ object QQService {
   val qqApiSecret = Config.qqApiScret.openOr("")
   var service: OAuthService = null
 
-  def requestAuthUrl(callBackURI: String) = {
+  def initService(callBackURI: String) = {
     service = (new ServiceBuilder().provider(new QQApi())).
       apiKey(qqApiKey).apiSecret(qqApiSecret).callback(callBackURI).
       signatureType(SignatureType.QueryString).build()
+  }
+
+  def requestAuthUrl(callBackURI: String) = {
+    initService(callBackURI)
     service.getAuthorizationUrl(null)
   }
 
