@@ -26,20 +26,38 @@ import net.liftweb.common.Empty
 import pgbe.util.QQService
 import java.net.URI
 import pgbe.util.Config
+import net.liftweb.common.Full
 
 object userVar extends SessionVar[Box[User]](Empty)
 
 class Comments extends Logger {
   var id = 0
   val id2Status = new scala.collection.mutable.HashMap[Int, Boolean] with SynchronizedMap[Int, Boolean]
-  val pageId = S.uri
+  val pageUrl = S.uri
+  val code = S.attr("code", _.toString)
+  val state = S.attr("stage", _.toString)
 
-  def ppId(id: Int) = pageId + "_" + id
+  def ppId(id: Int) = pageUrl + "_" + id
 
   def render = "p *+" #> { in: NodeSeq =>
+    (code, state) match {
+      case (Full(sCode), _) => {
+        val token = QQService.requestAccessToken(sCode)
+        info("token received, that is-----------:\n" + token)
+        val openId = QQService.requestOpenId(token)
+        info("now, we got openId, -------------:\n" + openId)
+        val userInfo = QQService.requestUserInfo(token, openId)
+        renderP
+      }
+      case _ => renderP //暂时忽略state参数
+    }
+  }
+
+  def renderP = {
     id += 1
     id2Status(id) = false
-    SHtml.a(createCommentLink(id), Text(linkCaption(id)), "id" -> ppId(id), "class" -> "btn-mini") ++ <div style="display:none" id={ "edit_" + id.toString() }/>
+    SHtml.a(createCommentLink(id), Text(linkCaption(id)), "id" -> ppId(id), "class" -> "btn-mini") ++
+      <div style="display:none" id={ "edit_" + id.toString() }/>
   }
 
   private def linkCaption(eId: Int) = {
@@ -67,12 +85,11 @@ class Comments extends Logger {
   }
 
   def loginBlock(eId: Int): NodeSeq = {
-    val callBack = "http://kaopua.com" + pageId + "?state=test" //+ ppId(eId)
-    info("回调地址为：" + callBack)
     val qqApiKey = Config.qqApiKey.openOr("")
     val qqApiSecret = Config.qqApiScret.openOr("")
-    val requestAuthUrl = new URI(QQService.requestAuthUrl(qqApiKey, qqApiSecret, callBack))
-    info("requestAuthUrl=" + requestAuthUrl)
+    val hostDomain = Config.hostDomain.openOr("")
+    val callBack = hostDomain + pageUrl + "?state=" + ppId(eId)
+    val requestAuthUrl = new URI(QQService.requestAuthUrl(callBack))
     <div><h4 class="alert alert-info">您必须登录后才能评论，本小站无力维护密码安全，请点击下面图标使用大公司的登录服务</h4></div>
     <div><span id="qqLoginBtn"></span><a href={ requestAuthUrl.toString() }><img src="../imgs/QQ_Connect_logo_7.png" alt="QQ登录 "/></a></div>
   }

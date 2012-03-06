@@ -4,4 +4,4 @@ db.user=pgbe
 db.pass=pgbe
 QQ.apiKey=your_api_key
 QQ.apiSecret=your_api_secret
-host.domain=kaopua.com/pgbe
+host.domain=your_domain
