@@ -36,7 +36,7 @@ class Boot extends Logger {
       Menu("ArticleList", "文章列表") / "articleList" >> LocGroup("read"),
       //---------------------------------------------------------------
       Menu("register", "注册") / "register" >> LocGroup("user"),
-      Menu("login", "登录") / "login" >> LocGroup("user"),
+      Menu("login", "登录") / "userLogin" >> LocGroup("user"),
       Menu("read", "阅读") / "upload" / ** >> LocGroup("user") >> Hidden,
       Menu("imgs", "图片") / "imgs" / ** >> LocGroup("static") >> Hidden,
       //---------------------------------------------------------------

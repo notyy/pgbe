@@ -12,31 +12,29 @@ object QQService {
   val scanner = new Scanner(System.in)
   val qqApiKey = Config.qqApiKey.openOr("")
   val qqApiSecret = Config.qqApiScret.openOr("")
-  var service: OAuthService = null
 
-  def initService(callBackURI: String) = {
-    service = (new ServiceBuilder().provider(new QQApi())).
+  def initService(callBackURI: String): OAuthService = {
+    (new ServiceBuilder().provider(new QQApi())).
       apiKey(qqApiKey).apiSecret(qqApiSecret).callback(callBackURI).
       signatureType(SignatureType.QueryString).build()
   }
 
-  def requestAuthUrl(callBackURI: String) = {
-    initService(callBackURI)
+  def requestAuthUrl(service: OAuthService) = {
     service.getAuthorizationUrl(null)
   }
 
-  def requestAccessToken(verifyCode: String) = {
+  def requestAccessToken(service: OAuthService, verifyCode: String) = {
     service.getAccessToken(null, new Verifier(verifyCode));
   }
 
-  def requestOpenId(accessToken: Token) = {
+  def requestOpenId(service: OAuthService, accessToken: Token) = {
     val request = new OAuthRequest(Verb.GET, "https://graph.qq.com/oauth2.0/me");
     service.signRequest(accessToken, request);
     val response = request.send()
     response.getBody()
   }
 
-  def requestUserInfo(accessToken: Token, openId: String) = {
+  def requestUserInfo(service: OAuthService, accessToken: Token, openId: String) = {
     val request = new OAuthRequest(Verb.GET, "https://graph.qq.com/user/get_user_info?openid=" + openId);
     service.signRequest(accessToken, request)
     val response = request.send()

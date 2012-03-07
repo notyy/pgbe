@@ -39,6 +39,7 @@ class Comments extends Logger {
   val state = S.param("state")
   val hostDomain = Config.hostDomain.openOr("")
   val callBack = hostDomain + pageUrl + "?state=test" // + ppId(eId)
+  val qqService = QQService.initService(callBack)
 
   def ppId(id: Int) = pageUrl + "_" + id
 
@@ -47,15 +48,15 @@ class Comments extends Logger {
       case (Full(sCode), _) => {
         QQService.initService(callBack)
         info("requesting accessToken-----------:\n")
-        val token = QQService.requestAccessToken(sCode)
+        val token = QQService.requestAccessToken(qqService, sCode)
         info("token received, that is-----------:\n" + token)
-        val callback = QQService.requestOpenId(token)
+        val callback = QQService.requestOpenId(qqService, token)
         info("now, we got callback of openId, -------------:\n" + callback)
         val t1 = callback.drop(callback.indexOf("{"))
         val t2 = t1.take(t1.indexOf("}") + 1)
         val openId = (parse(t2) \ "openid").toString()
         info("extracted openId is:\n" + openId)
-        val userInfo = QQService.requestUserInfo(token, openId)
+        val userInfo = QQService.requestUserInfo(qqService, token, openId)
         info("userInfo received:\n" + userInfo)
         renderP
       }
@@ -96,7 +97,7 @@ class Comments extends Logger {
 
   def loginBlock(eId: Int): NodeSeq = {
     info("requesting authurl-------callback=\n" + callBack)
-    val requestAuthUrl = new URI(QQService.requestAuthUrl(callBack))
+    val requestAuthUrl = new URI(QQService.requestAuthUrl(qqService))
     <div><h4 class="alert alert-info">您必须登录后才能评论，本小站无力维护密码安全，请点击下面图标使用大公司的登录服务</h4></div>
     <div><span id="qqLoginBtn"></span><a href={ requestAuthUrl.toString() }><img src="../imgs/QQ_Connect_logo_7.png" alt="QQ登录 "/></a></div>
   }
