@@ -55,7 +55,7 @@ class Comments extends Logger {
         renewQQUserInfo(token.value.openOr(""), openId.value.openOr(""))
         renderP
       }
-      case (_, _, _, Full(sCode), _) => {
+      case (Empty, Empty, Empty, Full(sCode), _) => {
         QQService.initService(callBack)
         info("requesting accessToken-----------:\n")
         val token = QQService.requestAccessToken(qqService, sCode)
@@ -91,6 +91,8 @@ class Comments extends Logger {
     val tokenCookie = HTTPCookie(QQ_TOKEN, token)
     openIdCookie.setDomain(Config.hostDomain.openOr(""))
     openIdCookie.setMaxAge(3600 * 24 * 7) //保留cookie一周
+    S.addCookie(openIdCookie)
+    S.addCookie(tokenCookie)
   }
 
   def renderP = {
