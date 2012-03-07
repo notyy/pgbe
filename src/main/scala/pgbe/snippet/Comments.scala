@@ -145,7 +145,7 @@ class Comments extends Logger {
     else {
       val preComments = commentsOnP.foldLeft[NodeSeq](Text("")) {
         (xml, comment) =>
-          xml ++ <span><img src={ comment.authorFigureUrl } alt=""></img> 来自{ comment.authorFrom }的网友 { comment.author } 发表于 </span><span>{ df.format(comment.createdAt.is) }</span><br/><span>{ comment.content }</span><p/>
+          xml ++ <span><img src={ comment.authorFigureUrl } alt=""></img> 来自{ comment.authorFrom }的网友 <strong>{ comment.author }</strong> 发表于 </span><span>{ df.format(comment.createdAt.is) }</span><br/><span>{ comment.content }</span><p/>
       }
       <div id={ "old_" + eId } class="well">{ preComments }</div>
     }
