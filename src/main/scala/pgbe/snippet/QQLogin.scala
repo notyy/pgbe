@@ -4,7 +4,7 @@ import scala.xml.{ NodeSeq }
 import net.liftweb.util.Helpers._
 import net.liftweb.http.S
 import pgbe.util.Config
-import pgbe.util.QQService
+import pgbe.util.oauth._
 import net.liftweb.common.Full
 import scala.xml.Text
 import net.liftweb.common.Logger
@@ -18,8 +18,9 @@ class QQLogin extends Logger {
   val qqService = QQService.initService(callBack)
 
   def render = "a [href]" #> { in: NodeSeq =>
+    info("code=" + code)
     (code, state) match {
-      case (Full(sCode), _) => info("CODE:" + sCode); S.notice("CODE:" + sCode); Text(QQService.requestAuthUrl(qqService))
+      case (Full(sCode), _) => info("CODE:" + sCode); S.warning("CODE:" + sCode); Text(QQService.requestAuthUrl(qqService))
       case _ => Text(QQService.requestAuthUrl(qqService))
     }
   }

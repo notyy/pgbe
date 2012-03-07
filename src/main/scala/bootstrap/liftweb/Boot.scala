@@ -73,6 +73,7 @@ class Boot extends Logger {
     Config.hostDomain = Props.get("host.domain")
 
     //some styling
+    LiftRules.noticesAutoFadeOut
     LiftRules.noticesAutoFadeOut.default.set(
       (notices: NoticeType.Value) => Full(2 seconds, 2 seconds))
   }

@@ -1,4 +1,4 @@
-package pgbe.util
+package pgbe.util.oauth
 import org.scribe.builder.api.DefaultApi20
 import org.scribe.model.OAuthConfig
 import org.scribe.utils.Preconditions

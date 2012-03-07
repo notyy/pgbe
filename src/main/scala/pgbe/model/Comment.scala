@@ -20,6 +20,24 @@ class Comment extends LongKeyedMapper[Comment] with CreatedTrait with IdPK {
         valMaxLen(20, "用户名最多20个字符") _ :: Nil
   }
 
+  object authorFrom extends MappedString(this, 20) {
+    override def displayName = "用户来源"
+    override def formElemAttrs = List("class" -> "span4", "placeholder" -> "您来自哪里")
+
+    override def validations =
+      valMinLen(3, "用户来源最少2个字符") _ ::
+        valMaxLen(20, "用户来源最多20个字符") _ :: Nil
+  }
+
+  object authorFigureUrl extends MappedString(this, 200) {
+    override def displayName = "用户头像"
+    override def formElemAttrs = List("class" -> "span4", "placeholder" -> "您的头像地址")
+
+    override def validations =
+      valMinLen(3, "用户头像最少2个字符") _ ::
+        valMaxLen(20, "用户头像最多200个字符") _ :: Nil
+  }
+
   object content extends MappedTextarea(this, 255) {
     override def dbNotNull_? = true
     override def displayName = "内容"

@@ -11,19 +11,24 @@ import net.liftweb.http.js.JsCmd
 import net.liftweb.http.js.JsCmds.SetHtml
 import scala.xml.Text
 import scala.xml.Elem
+import net.liftweb.common.Logger
 
-class CommentScreen(val ppId: String, val onDone: () => JsCmd) extends LiftScreen {
+class CommentScreen(val ppId: String, val author: String, val authorFrom: String,
+  val authorFigureUrl: String, val onDone: () => JsCmd) extends LiftScreen with Logger {
   override def defaultToAjax_? = true
   override def finishButton: Elem = <input type="submit" class="btn btn-primary btn-large" value="确定"/>
 
   object comment extends ScreenVar(Comment.create)
 
   val f = comment.content
-  addFields(() => comment.author)
+  //  addFields(() => comment.author)
   addFields(() => comment.content)
 
   def finish() {
     comment.ppId := ppId
+    comment.author := author
+    comment.authorFrom := authorFrom
+    comment.authorFigureUrl := authorFigureUrl
     if (comment.save()) S.notice("感谢评论")
     else S.error("评论保存失败")
     //    comment.remove()

@@ -23,15 +23,19 @@ import net.liftweb.http.SessionVar
 import net.liftweb.common.Box
 import pgbe.model.User
 import net.liftweb.common.Empty
-import pgbe.util.QQService
+import pgbe.util.oauth._
 import java.net.URI
 import pgbe.util.Config
 import net.liftweb.common.Full
 import net.liftweb.json._
+import net.liftweb.http.provider.HTTPCookie
+import org.scribe.model.Token
 
 object userVar extends SessionVar[Box[User]](Empty)
 
 class Comments extends Logger {
+  val QQ_OPENID = "kaopua.qq.openId"
+  val QQ_TOKEN = "kaopua.qq.token"
   var id = 0
   val id2Status = new scala.collection.mutable.HashMap[Int, Boolean] with SynchronizedMap[Int, Boolean]
   val pageUrl = S.uri
@@ -40,12 +44,18 @@ class Comments extends Logger {
   val hostDomain = Config.hostDomain.openOr("")
   val callBack = hostDomain + pageUrl + "?state=test" // + ppId(eId)
   val qqService = QQService.initService(callBack)
-
+  val openIdCookie = S.findCookie(QQ_OPENID)
+  val tokenCookie = S.findCookie(QQ_TOKEN)
   def ppId(id: Int) = pageUrl + "_" + id
 
   def render = "p *+" #> { in: NodeSeq =>
-    (code, state) match {
-      case (Full(sCode), _) => {
+    (userVar.is, openIdCookie, tokenCookie, code, state) match {
+      case (Full(user), _, _, _, _) => renderP
+      case (Empty, Full(openId), Full(token), _, _) => {
+        renewQQUserInfo(token.value.openOr(""), openId.value.openOr(""))
+        renderP
+      }
+      case (_, _, _, Full(sCode), _) => {
         QQService.initService(callBack)
         info("requesting accessToken-----------:\n")
         val token = QQService.requestAccessToken(qqService, sCode)
@@ -56,12 +66,31 @@ class Comments extends Logger {
         val t2 = t1.take(t1.indexOf("}") + 1)
         val openId = (parse(t2) \ "openid").toString()
         info("extracted openId is:\n" + openId)
-        val userInfo = QQService.requestUserInfo(qqService, token, openId)
-        info("userInfo received:\n" + userInfo)
+        renewQQUserInfo(token.getToken(), openId)
         renderP
       }
       case _ => info("No code para, normal rendering"); renderP //暂时忽略state参数
     }
+  }
+
+  def renewQQUserInfo(token: String, openId: String) = {
+    QQService.requestUserInfo(qqService, new Token(token, ""), openId, Config.qqApiKey.openOr("")) match {
+      case Some(qqUserInfo) => {
+        val user = User("QQ", qqUserInfo.nickName, qqUserInfo.figureurl_1, Some(openId), Some(token))
+        userVar(Box !! (user))
+        setCookie(openId, token)
+      }
+      case None => ()
+    }
+  }
+
+  def setCookie(openId: String, token: String) = {
+    val openIdCookie = HTTPCookie(QQ_OPENID, openId)
+    openIdCookie.setDomain(Config.hostDomain.openOr(""))
+    openIdCookie.setMaxAge(3600 * 24 * 7) //保留cookie一周
+    val tokenCookie = HTTPCookie(QQ_TOKEN, token)
+    openIdCookie.setDomain(Config.hostDomain.openOr(""))
+    openIdCookie.setMaxAge(3600 * 24 * 7) //保留cookie一周
   }
 
   def renderP = {
@@ -91,7 +120,13 @@ class Comments extends Logger {
   def createCommentBlock(eId: Int, editId: String): () => JsCmd = { () =>
     SetHtml(editId,
       getOldCommentsView(eId) ++
-        (if (userVar.isEmpty) loginBlock(eId) else new CommentScreen(eId.toString(), createCommentBlock(eId, editId)).toForm)) &
+        (if (userVar.isEmpty) loginBlock(eId)
+        else {
+          val nickName = userVar.map(_.nickName).openOr("")
+          val comeFrom = userVar.map(_.comeFrom).openOr("")
+          val figureUrl = userVar.map(_.figureUrl).openOr("")
+          <span></span> ++ new CommentScreen(eId.toString(), nickName, comeFrom, figureUrl, createCommentBlock(eId, editId)).toForm
+        })) &
       SetHtml(ppId(eId).toString(), Text(linkCaption(eId)))
   }
 
@@ -110,7 +145,7 @@ class Comments extends Logger {
     else {
       val preComments = commentsOnP.foldLeft[NodeSeq](Text("")) {
         (xml, comment) =>
-          xml ++ <span>{ comment.author } 发表于 </span><span>{ df.format(comment.createdAt.is) }</span><br/><span>{ comment.content }</span><p/>
+          xml ++ <span><img src={ comment.authorFigureUrl } alt=""></img> 来自{ comment.authorFrom }的网友 { comment.author } 发表于 </span><span>{ df.format(comment.createdAt.is) }</span><br/><span>{ comment.content }</span><p/>
       }
       <div id={ "old_" + eId } class="well">{ preComments }</div>
     }
