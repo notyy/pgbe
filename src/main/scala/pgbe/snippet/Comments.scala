@@ -76,7 +76,7 @@ class Comments extends Logger {
   def renewQQUserInfo(token: String, openId: String) = {
     QQService.requestUserInfo(qqService, new Token(token, ""), openId, Config.qqApiKey.openOr("")) match {
       case Some(qqUserInfo) => {
-        val user = User("QQ", qqUserInfo.nickName, qqUserInfo.figureurl_1, Some(openId), Some(token))
+        val user = User("QQ", qqUserInfo.nickName, qqUserInfo.figureurl, Some(openId), Some(token))
         userVar(Box !! (user))
         setCookie(openId, token)
       }
