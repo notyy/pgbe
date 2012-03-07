@@ -13,6 +13,7 @@ import pgbe.util.Config
 import net.liftweb.common.Box
 import net.liftweb.common.Failure
 import net.liftweb.common.Empty
+import net.liftweb.common.Full
 
 object QQService extends Logger {
   val qqApiKey = Config.qqApiKey.openOr("")
@@ -35,8 +36,13 @@ object QQService extends Logger {
     service.getAuthorizationUrl(null)
   }
 
-  def requestAccessToken(service: OAuthService, verifyCode: String) = {
-    service.getAccessToken(null, new Verifier(verifyCode));
+  def requestAccessToken(service: OAuthService, verifyCode: String): Box[Token] = {
+    try {
+      Full(service.getAccessToken(null, new Verifier(verifyCode)))
+    } catch {
+      case e: Exception => warn("can't not get token", e); Empty
+    }
+
   }
 
   def requestOpenId(service: OAuthService, accessToken: Token) = {

@@ -59,15 +59,19 @@ class Comments extends Logger {
         QQService.initService(callBack)
         info("requesting accessToken-----------:\n")
         val token = QQService.requestAccessToken(qqService, sCode)
-        info("token received, that is-----------:\n" + token)
-        val callback = QQService.requestOpenId(qqService, token)
-        info("now, we got callback of openId, -------------:\n" + callback)
-        val t1 = callback.drop(callback.indexOf("{"))
-        val t2 = t1.take(t1.indexOf("}") + 1)
-        val openId = (parse(t2) \ "openid").toString()
-        info("extracted openId is:\n" + openId)
-        renewQQUserInfo(token.getToken(), openId)
-        renderP
+        if (token.isEmpty) {
+          renderP
+        } else {
+          info("token received, that is-----------:\n" + token)
+          val callback = QQService.requestOpenId(qqService, token.openTheBox)
+          info("now, we got callback of openId, -------------:\n" + callback)
+          val t1 = callback.drop(callback.indexOf("{"))
+          val t2 = t1.take(t1.indexOf("}") + 1)
+          val openId = (parse(t2) \ "openid").toString()
+          info("extracted openId is:\n" + openId)
+          renewQQUserInfo(token.openTheBox.getToken(), openId)
+          renderP
+        }
       }
       case _ => info("No code para, normal rendering"); renderP //暂时忽略state参数
     }
