@@ -46,9 +46,8 @@ class Comments extends Logger {
   val qqService = QQService.initService(callBack)
   val openIdCookie = S.findCookie(QQ_OPENID)
   val tokenCookie = S.findCookie(QQ_TOKEN)
-  def ppId(id: Int) = pageUrl + "_" + id
 
-  def render = "p *+" #> { in: NodeSeq =>
+  { //初始化用户资料变量
     (userVar.is, openIdCookie, tokenCookie, code, state) match {
       case (Full(user), _, _, _, _) => renderP
       case (Empty, Full(openId), Full(token), _, _) => {
@@ -75,6 +74,12 @@ class Comments extends Logger {
       }
       case _ => info("No code para, normal rendering"); renderP //暂时忽略state参数
     }
+  }
+
+  def ppId(id: Int) = pageUrl + "_" + id
+
+  def render = "p *+" #> { in: NodeSeq =>
+    renderP
   }
 
   def renewQQUserInfo(token: String, openId: String) = {
