@@ -49,17 +49,16 @@ class Comments extends Logger {
 
   { //初始化用户资料变量
     (userVar.is, openIdCookie, tokenCookie, code, state) match {
-      case (Full(user), _, _, _, _) => renderP
+      case (Full(user), _, _, _, _) => ()
       case (Empty, Full(openId), Full(token), _, _) => {
         renewQQUserInfo(token.value.openOr(""), openId.value.openOr(""))
-        renderP
       }
       case (Empty, Empty, Empty, Full(sCode), _) => {
         QQService.initService(callBack)
         info("requesting accessToken-----------:\n")
         val token = QQService.requestAccessToken(qqService, sCode)
         if (token.isEmpty) {
-          renderP
+          warn("failed to get token")
         } else {
           info("token received, that is-----------:\n" + token)
           val callback = QQService.requestOpenId(qqService, token.openTheBox)
@@ -69,17 +68,19 @@ class Comments extends Logger {
           val openId = (parse(t2) \ "openid").toString()
           info("extracted openId is:\n" + openId)
           renewQQUserInfo(token.openTheBox.getToken(), openId)
-          renderP
         }
       }
-      case _ => info("No code para, normal rendering"); renderP //暂时忽略state参数
+      case _ => info("No code para, normal rendering") //暂时忽略state参数
     }
   }
 
   def ppId(id: Int) = pageUrl + "_" + id
 
   def render = "p *+" #> { in: NodeSeq =>
-    renderP
+    id += 1
+    id2Status(id) = false
+    SHtml.a(createCommentLink(id), Text(linkCaption(id)), "id" -> ppId(id), "class" -> "btn-mini") ++
+      <div style="display:none" id={ "edit_" + id.toString() }/>
   }
 
   def renewQQUserInfo(token: String, openId: String) = {
@@ -104,13 +105,6 @@ class Comments extends Logger {
     S.addCookie(tokenCookie)
   }
 
-  def renderP = {
-    id += 1
-    id2Status(id) = false
-    SHtml.a(createCommentLink(id), Text(linkCaption(id)), "id" -> ppId(id), "class" -> "btn-mini") ++
-      <div style="display:none" id={ "edit_" + id.toString() }/>
-  }
-
   private def linkCaption(eId: Int) = {
     val commentsOnPLength = Comment.findAll(By(Comment.ppId, ppId(eId)), OrderBy(Comment.createdAt, Ascending)).length
     if (commentsOnPLength > 0) (commentsOnPLength + "条评论") else "没有评论"
@@ -129,37 +123,61 @@ class Comments extends Logger {
   }
 
   def createCommentBlock(eId: Int, editId: String): () => JsCmd = { () =>
-    SetHtml(editId,
-      getOldCommentsView(eId) ++
+    info("createCommentBlock(eId=" + eId + ",editId=" + editId)
+
+    val jsCmd = SetHtml(editId,
+      getOldCommentsView(eId)
+        ++
         (if (userVar.isEmpty) loginBlock(eId)
         else {
+          info("creating comment form")
           val nickName = userVar.map(_.nickName).openOr("")
           val comeFrom = userVar.map(_.comeFrom).openOr("")
           val figureUrl = userVar.map(_.figureUrl).openOr("")
-          <span></span> ++ new CommentScreen(eId.toString(), nickName, comeFrom, figureUrl, createCommentBlock(eId, editId)).toForm
-        })) &
-      SetHtml(ppId(eId).toString(), Text(linkCaption(eId)))
+          val commentForm = <span></span> ++ new CommentScreen(eId.toString(), nickName, comeFrom, figureUrl, createCommentBlock(eId, editId)).toForm
+          info("comment form created:\n" + commentForm)
+          commentForm
+        })) & {
+        info("change link to show comment counts")
+        val changeLinkJS = SetHtml(ppId(eId).toString(), Text(linkCaption(eId)))
+        info("link counts shown")
+        changeLinkJS
+      }
+    info("commentBlock created\n" + jsCmd)
+    jsCmd
   }
 
   def loginBlock(eId: Int): NodeSeq = {
     info("requesting authurl-------callback=\n" + callBack)
     val requestAuthUrl = new URI(QQService.requestAuthUrl(qqService))
-    <div><h4 class="alert alert-info">您必须登录后才能评论，本小站无力维护密码安全，请点击下面图标使用大公司的登录服务</h4></div>
-    <div><span id="qqLoginBtn"></span><a href={ requestAuthUrl.toString() }><img src="../imgs/QQ_Connect_logo_7.png" alt="QQ登录 "/></a></div>
+    info("authurl is ------------------=\n" + requestAuthUrl)
+    val loginBlock: NodeSeq = {
+      <div><h4 class="alert alert-info">您必须登录后才能评论，本小站无力维护密码安全，请点击下面图标使用大公司的登录服务</h4></div> ++
+        <div><span id="qqLoginBtn"></span><a href={ requestAuthUrl.toString() }><img src="../imgs/QQ_Connect_logo_7.png" alt="QQ登录 "/></a></div>
+    }
+    info("loginBlock created\n" + loginBlock)
+    loginBlock
   }
 
   private def getOldCommentsView(eId: => Int): NodeSeq = {
+    info("getOldCommentsView:eId=" + eId)
     val commentsOnP = Comment.findAll(By(Comment.ppId, eId.toString()), OrderBy(Comment.createdAt, Ascending))
     val preCommentView: NodeSeq = Text("")
     val df = new SimpleDateFormat("yyyy年 MM月 dd日 HH时 mm分 ss秒")
-    if (commentsOnP.isEmpty) Text("")
-    else {
-      val preComments = commentsOnP.foldLeft[NodeSeq](Text("")) {
-        (xml, comment) =>
-          xml ++ <span><img src={ comment.authorFigureUrl } alt=""></img> 来自{ comment.authorFrom }的网友 <strong>{ comment.author }</strong> 发表于 </span><span>{ df.format(comment.createdAt.is) }</span><br/><span>{ comment.content }</span><p/>
+    val oldComments = {
+      if (commentsOnP.isEmpty) Text("")
+      else {
+        val preComments = commentsOnP.foldLeft[NodeSeq](Text("")) {
+          (xml, comment) =>
+            xml ++ <span><img src={ isOr(comment.authorFigureUrl, "") } alt=""></img> 来自{ isOr(comment.authorFrom, "") }的网友 <strong>{ isOr(comment.author, "") }</strong> 发表于 </span><span>{ df.format(comment.createdAt.is) }</span><br/><span>{ comment.content }</span><p/>
+        }
+        <div id={ "old_" + eId } class="well">{ preComments }</div>
       }
-      <div id={ "old_" + eId } class="well">{ preComments }</div>
     }
+    info("old comments retrieved\n" + oldComments)
+    oldComments
   }
+
+  def isOr(s: String, default: String) = if (s == null || s.isEmpty()) default else s
 
 }
