@@ -134,7 +134,7 @@ class Comments extends Logger {
           val nickName = userVar.map(_.nickName).openOr("")
           val comeFrom = userVar.map(_.comeFrom).openOr("")
           val figureUrl = userVar.map(_.figureUrl).openOr("")
-          val commentForm = <span></span> ++ new CommentScreen(eId.toString(), nickName, comeFrom, figureUrl, createCommentBlock(eId, editId)).toForm
+          val commentForm = <span></span> ++ new CommentScreen(ppId(eId), nickName, comeFrom, figureUrl, createCommentBlock(eId, editId)).toForm
           info("comment form created:\n" + commentForm)
           commentForm
         })) & {
@@ -161,7 +161,7 @@ class Comments extends Logger {
 
   private def getOldCommentsView(eId: => Int): NodeSeq = {
     info("getOldCommentsView:eId=" + eId)
-    val commentsOnP = Comment.findAll(By(Comment.ppId, eId.toString()), OrderBy(Comment.createdAt, Ascending))
+    val commentsOnP = Comment.findAll(By(Comment.ppId, ppId(eId)), OrderBy(Comment.createdAt, Ascending))
     val preCommentView: NodeSeq = Text("")
     val df = new SimpleDateFormat("yyyy年 MM月 dd日 HH时 mm分 ss秒")
     val oldComments = {
