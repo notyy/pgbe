@@ -1,0 +1,26 @@
+<lift:surround with="default" at="content">
+  <lift:comments pageId="upload2">
+    <div class="span2">  <!-- 占位 -->
+      <h3>占位</h3>
+    </div>
+	<div class="span8" style="margin-top:40px">
+	  <lift:Msgs showAll="false">
+	    <lift:notice_class>alert alert-success</lift:notice_class>
+	    <lift:warning_class>alert</lift:warning_class>
+	    <lift:error_class>alert alert-error</lift:error_class> 
+	  </lift:Msgs>
+      <h3>第十天。2012年3月7日</h3>
+      <p>实现了评论持久化和QQ登录</p>
+	  <p>持久化使用lift的Mapper框架倒是不难，依然要注意lift的特点：view in code.比如<a href="https://github.com/notyy/pgbe/blob/master/src/main/scala/pgbe/model/Comment.scala">Comment表的定义</a>可以看到其中定义了displayName，还有校验的方法，甚至Comment伴生对象继承的MetaMapper是有toForm方法的可以直接生成HTML表单。 当然更好的方法是使用LiftScreen，LiftScreen也跟Mapper集成的非常好，我便是定义了一个CommentScreen</p>
+      <p>与持久化的简单形成鲜明对比的是添加QQ登录支持的痛苦，为了省点功夫，我使用了<a href="https://github.com/fernandezpablo85/scribe-java">scribe库</a>并且没有好好研究OAuth2规范，只是草草看了下Facebook的例子就开始动手，事实证明欲速则不达是永恒的真理。。。经过数天的折腾，差不多算是把oauth2规范和QQ的那些接口参数搞明白了，然后就感觉scribe这库设计得不咋地，在添加新浪微博支持前，我考虑从scribe里偷点代码然后设计个自己的scala库</p>
+	  <p>另外一个教训就是再急着产出结果也不能失了章法，这几天写的一坨代码如屎一般，虽然能用了，但进行下一步开发前一定要重构并且补上全部的单元测试，当然还得再看lift in action学习怎么测试snippet。</p>
+      <p>这几天虽然搞得很累，但感觉倒也把不少地雷趟掉了，还剩下的有comet和rest，这两部分在设计管理界面和文章上传功能时应该会用到</p>
+	  <p>另外，上次风自由提出当用户修改文章导致段落增加时，评论是否会错位？从目前的设计来说是肯定会错位的。老猪提出模仿github的方式给每段做digest，但是这方式无法区分新增的段落和修改的段落，我思考了一下，这个digest的方式还是有可为的：</p>
+	  <img src="http://notyy_image.b0.upaiyun.com/pgbe/pDigest.png" />
+	  <p>如图所示，如果我们在用户上传文章时对每段做了摘要并与id关联，当用户修改文章，将中间的某段B做了修改，变成了B'和B''时，我们其实可以继续比对，直到找到下一个没有修改的段落（digest未改变的），则改变了的段落可重新取id，其中一段使用原B的id以挂靠原B的评论，而其他段落不受影响。这样应该就可以将段落改变的影响降到最低。</p>
+	</div>
+	<div class="span2" style="display:none">  <!-- 占位 -->
+      <h3>占位</h3>
+    </div>
+  </lift:comments>
+</lift:surround>
