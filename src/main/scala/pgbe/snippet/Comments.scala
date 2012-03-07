@@ -106,7 +106,9 @@ class Comments extends Logger {
   }
 
   private def linkCaption(eId: Int) = {
+    info("calc linkCaption for eId:" + eId)
     val commentsOnPLength = Comment.findAll(By(Comment.ppId, ppId(eId)), OrderBy(Comment.createdAt, Ascending)).length
+    info("find " + commentsOnPLength + " comments for ppId = " + ppId(eId))
     if (commentsOnPLength > 0) (commentsOnPLength + "条评论") else "没有评论"
   }
 
@@ -124,7 +126,6 @@ class Comments extends Logger {
 
   def createCommentBlock(eId: Int, editId: String): () => JsCmd = { () =>
     info("createCommentBlock(eId=" + eId + ",editId=" + editId)
-
     val jsCmd = SetHtml(editId,
       getOldCommentsView(eId)
         ++
@@ -139,7 +140,7 @@ class Comments extends Logger {
           commentForm
         })) & {
         info("change link to show comment counts")
-        val changeLinkJS = SetHtml(ppId(eId).toString(), Text(linkCaption(eId)))
+        val changeLinkJS = SetHtml(ppId(eId), Text(linkCaption(eId)))
         info("link counts shown")
         changeLinkJS
       }
