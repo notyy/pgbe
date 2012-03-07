@@ -11,12 +11,12 @@ object QQLoginTest extends Logger {
     val token = QQService.requestAccessToken(qqService, code)
     info("token为:" + token)
     info("现在获取openid")
-    val openIdResp = QQService.requestOpenId(qqService, token)
+    val openIdResp = QQService.requestOpenId(qqService, token.openTheBox)
     info("收到的原始响应为:" + openIdResp)
     val openId = QQService.extractOpenId(openIdResp)
     info("解出的 openId 为:\n" + openId)
     info("现在获取userInfo")
-    val userInfoResp = QQService.requestUserInfo(qqService, token, openId, apiKey)
+    val userInfoResp = QQService.requestUserInfo(qqService, token.openTheBox, openId, apiKey)
     info("收到的原始响应为:" + userInfoResp)
   }
 }
