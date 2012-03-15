@@ -67,11 +67,6 @@ class Boot extends Logger {
       Schemifier.schemify(true, Schemifier.infoF _,
         Comment)
 
-    //set some config values
-    Config.qqApiKey = Props.get("QQ.apiKey")
-    Config.qqApiScret = Props.get("QQ.apiSecret")
-    Config.hostDomain = Props.get("host.domain")
-
     //some styling
     LiftRules.noticesAutoFadeOut
     LiftRules.noticesAutoFadeOut.default.set(

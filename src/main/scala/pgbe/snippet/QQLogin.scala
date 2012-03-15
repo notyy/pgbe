@@ -7,21 +7,25 @@ import pgbe.util.Config
 import pgbe.util.oauth._
 import net.liftweb.common.Full
 import scala.xml.Text
-import net.liftweb.common.Logger
+import Config._
+import org.slf4j.LoggerFactory
 
-class QQLogin extends Logger {
+class QQLogin {
+  val logger = LoggerFactory.getLogger(this.getClass())
   val pageUrl = S.uri
   val code = S.param("code")
   val state = S.param("state")
-  val hostDomain = Config.hostDomain.openOr("")
+  val hostDomain = hostDomainVar
   val callBack = hostDomain + pageUrl + "?state=test" // + ppId(eId)
-  val qqService = QQService.initService(callBack)
+  //val qqService = QQService.getInstance(qqApiKeyVar, qqApiScretVar, callBack)
+
+  def testDo = logger.info("ok,I do sth")
 
   def render = "a [href]" #> { in: NodeSeq =>
-    info("code=" + code)
+    logger.info("code=" + code)
     (code, state) match {
-      case (Full(sCode), _) => info("CODE:" + sCode); S.warning("CODE:" + sCode); Text(QQService.requestAuthUrl(qqService))
-      case _ => Text(QQService.requestAuthUrl(qqService))
+      case (Full(sCode), _) => logger.info("CODE:" + sCode); S.warning("CODE:" + sCode); Text("") //Text(QQService.makeAuthUrl(qqService))
+      case _ => Text("") //Text(QQService.makeAuthUrl(qqService))
     }
   }
 }

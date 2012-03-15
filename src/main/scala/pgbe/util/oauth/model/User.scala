@@ -1,4 +1,4 @@
-package pgbe.model
+package pgbe.util.oauth.model
 
 case class User(
   val comeFrom: String,

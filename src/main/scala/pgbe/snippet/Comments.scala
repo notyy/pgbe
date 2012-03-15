@@ -21,7 +21,6 @@ import net.liftweb.mapper.OrderBy
 import net.liftweb.mapper.Ascending
 import net.liftweb.http.SessionVar
 import net.liftweb.common.Box
-import pgbe.model.User
 import net.liftweb.common.Empty
 import pgbe.util.oauth._
 import java.net.URI
@@ -29,23 +28,25 @@ import pgbe.util.Config
 import net.liftweb.common.Full
 import net.liftweb.json._
 import net.liftweb.http.provider.HTTPCookie
-import org.scribe.model.Token
+import Config._
+import pgbe.util.oauth.model.User
 
 object userVar extends SessionVar[Box[User]](Empty)
 
 class Comments extends Logger {
-  val QQ_OPENID = "kaopua.qq.openId"
-  val QQ_TOKEN = "kaopua.qq.token"
-  var id = 0
-  val id2Status = new scala.collection.mutable.HashMap[Int, Boolean] with SynchronizedMap[Int, Boolean]
-  val pageUrl = S.uri
-  val code = S.param("code")
-  val state = S.param("state")
-  val hostDomain = Config.hostDomain.openOr("")
-  val callBack = hostDomain + pageUrl + "?state=test" // + ppId(eId)
-  val qqService = QQService.initService(callBack)
-  val openIdCookie = S.findCookie(QQ_OPENID)
-  val tokenCookie = S.findCookie(QQ_TOKEN)
+  private val QQ_OPENID = "kaopua.qq.openId"
+  private val QQ_TOKEN = "kaopua.qq.token"
+  private val openIdCookie = S.findCookie(QQ_OPENID)
+  private val tokenCookie = S.findCookie(QQ_TOKEN)
+  private var id = 0
+  private val id2Status = new scala.collection.mutable.HashMap[Int, Boolean] with SynchronizedMap[Int, Boolean]
+  private val pageUrl = S.uri
+  private val code = S.param("code")
+  private val state = S.param("state")
+  private val hostDomain = Config.hostDomainVar
+  private val callBackUrl = hostDomain + pageUrl
+  private val qqService = new QQService(Config.qqApiKeyVar, Config.qqApiScretVar, "fromQQ")
+  qqService.redirectUri = Some(callBackUrl)
 
   { //初始化用户资料变量
     (userVar.is, openIdCookie, tokenCookie, code, state) match {
@@ -53,23 +54,23 @@ class Comments extends Logger {
       case (Empty, Full(openId), Full(token), _, _) => {
         renewQQUserInfo(token.value.openOr(""), openId.value.openOr(""))
       }
-      case (Empty, Empty, Empty, Full(sCode), _) => {
-        QQService.initService(callBack)
-        info("requesting accessToken-----------:\n")
-        val token = QQService.requestAccessToken(qqService, sCode)
-        if (token.isEmpty) {
-          warn("failed to get token")
-        } else {
-          info("token received, that is-----------:\n" + token)
-          val callback = QQService.requestOpenId(qqService, token.openTheBox)
-          info("now, we got callback of openId, -------------:\n" + callback)
-          val t1 = callback.drop(callback.indexOf("{"))
-          val t2 = t1.take(t1.indexOf("}") + 1)
-          val openId = (parse(t2) \ "openid").toString()
-          info("extracted openId is:\n" + openId)
-          renewQQUserInfo(token.openTheBox.getToken(), openId)
-        }
-      }
+      //      case (Empty, Empty, Empty, Full(sCode), _) => {
+      //        QQService.getInstance(qqApiKeyVar, qqApiScretVar, callBackUrl)
+      //        info("requesting accessToken-----------:\n")
+      //        val token = QQService.requestAccessToken_!(qqService, sCode)
+      //        if (token.isEmpty) {
+      //          warn("failed to get token")
+      //        } else {
+      //          info("token received, that is-----------:\n" + token)
+      //          val callback = QQService.requestOpenId_!(qqService, token.openTheBox)
+      //          info("now, we got callback of openId, -------------:\n" + callback)
+      //          val t1 = callback.drop(callback.indexOf("{"))
+      //          val t2 = t1.take(t1.indexOf("}") + 1)
+      //          val openId = (parse(t2) \ "openid").toString()
+      //          info("extracted openId is:\n" + openId)
+      //          renewQQUserInfo(token.openTheBox.getToken(), openId)
+      //        }
+      //      }
       case _ => info("No code para, normal rendering") //暂时忽略state参数
     }
   }
@@ -84,22 +85,22 @@ class Comments extends Logger {
   }
 
   def renewQQUserInfo(token: String, openId: String) = {
-    QQService.requestUserInfo(qqService, new Token(token, ""), openId, Config.qqApiKey.openOr("")) match {
-      case Some(qqUserInfo) => {
-        val user = User("QQ", qqUserInfo.nickName, qqUserInfo.figureurl, Some(openId), Some(token))
-        userVar(Box !! (user))
-        setCookie(openId, token)
-      }
-      case None => ()
-    }
+    //    QQService.requestUserInfo_!(qqService, new Token(token, ""), openId, qqApiKeyVar) match {
+    //      case Some(qqUserInfo) => {
+    //        val user = User("QQ", qqUserInfo.nickName, qqUserInfo.figureurl, Some(openId), Some(token))
+    //        userVar(Box !! (user))
+    //        setCookie(openId, token)
+    //      }
+    //      case None => ()
+    //    }
   }
 
   def setCookie(openId: String, token: String) = {
     val openIdCookie = HTTPCookie(QQ_OPENID, openId)
-    openIdCookie.setDomain(Config.hostDomain.openOr(""))
+    openIdCookie.setDomain(hostDomainVar)
     openIdCookie.setMaxAge(3600 * 24 * 7) //保留cookie一周
     val tokenCookie = HTTPCookie(QQ_TOKEN, token)
-    openIdCookie.setDomain(Config.hostDomain.openOr(""))
+    openIdCookie.setDomain(hostDomainVar)
     openIdCookie.setMaxAge(3600 * 24 * 7) //保留cookie一周
     S.addCookie(openIdCookie)
     S.addCookie(tokenCookie)
@@ -149,8 +150,8 @@ class Comments extends Logger {
   }
 
   def loginBlock(eId: Int): NodeSeq = {
-    info("requesting authurl-------callback=\n" + callBack)
-    val requestAuthUrl = new URI(QQService.requestAuthUrl(qqService))
+    info("requesting authurl-------callback=\n" + callBackUrl)
+    val requestAuthUrl = qqService.makeAuthUrl
     info("authurl is ------------------=\n" + requestAuthUrl)
     val loginBlock: NodeSeq = {
       <div><h4 class="alert alert-info">您必须登录后才能评论，本小站无力维护密码安全，请点击下面图标使用大公司的登录服务</h4></div> ++
