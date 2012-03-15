@@ -54,23 +54,24 @@ class Comments extends Logger {
       case (Empty, Full(openId), Full(token), _, _) => {
         renewQQUserInfo(token.value.openOr(""), openId.value.openOr(""))
       }
-      //      case (Empty, Empty, Empty, Full(sCode), _) => {
-      //        QQService.getInstance(qqApiKeyVar, qqApiScretVar, callBackUrl)
-      //        info("requesting accessToken-----------:\n")
-      //        val token = QQService.requestAccessToken_!(qqService, sCode)
-      //        if (token.isEmpty) {
-      //          warn("failed to get token")
-      //        } else {
-      //          info("token received, that is-----------:\n" + token)
-      //          val callback = QQService.requestOpenId_!(qqService, token.openTheBox)
-      //          info("now, we got callback of openId, -------------:\n" + callback)
-      //          val t1 = callback.drop(callback.indexOf("{"))
-      //          val t2 = t1.take(t1.indexOf("}") + 1)
-      //          val openId = (parse(t2) \ "openid").toString()
-      //          info("extracted openId is:\n" + openId)
-      //          renewQQUserInfo(token.openTheBox.getToken(), openId)
-      //        }
-      //      }
+      case (Empty, Empty, Empty, Full(sCode), _) => {
+        info("got code:" + sCode)
+        //        QQService.getInstance(qqApiKeyVar, qqApiScretVar, callBackUrl)
+        //        info("requesting accessToken-----------:\n")
+        //        val token = QQService.requestAccessToken_!(qqService, sCode)
+        //        if (token.isEmpty) {
+        //          warn("failed to get token")
+        //        } else {
+        //          info("token received, that is-----------:\n" + token)
+        //          val callback = QQService.requestOpenId_!(qqService, token.openTheBox)
+        //          info("now, we got callback of openId, -------------:\n" + callback)
+        //          val t1 = callback.drop(callback.indexOf("{"))
+        //          val t2 = t1.take(t1.indexOf("}") + 1)
+        //          val openId = (parse(t2) \ "openid").toString()
+        //          info("extracted openId is:\n" + openId)
+        //          renewQQUserInfo(token.openTheBox.getToken(), openId)
+        //        }
+      }
       case _ => info("No code para, normal rendering") //暂时忽略state参数
     }
   }
