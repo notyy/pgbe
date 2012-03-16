@@ -50,3 +50,5 @@ seq(webSettings :_*)
 libraryDependencies += "org.mortbay.jetty" % "jetty" % "6.1.22" % "test,container"
 
 libraryDependencies += "org.scala-tools.testing" %% "specs" % "1.6.9" % "test"
+
+parallelExecution in Test := false

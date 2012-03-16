@@ -21,4 +21,6 @@ case class Token(val accessToken: String, val expire: Long)
 abstract trait OAuthService {
   val reqBuilder = OAuthRequestBuilder
   val connector = Connector
+
+  val responseExtractor = ResponseExtractor
 }

@@ -34,16 +34,16 @@ trait CommonOAuthService extends OAuthService {
     val params = "requestAccessToken (endPoint:" + endPointForAccessToken + ",code:" + verifyCode + ",redirectUrl:" + redirectUri + ",state:" + state + ")"
     logger.info(params)
     val resp = connector.send_!(reqBuilder.build(Request(endPointForAccessToken,
-      Param("clientId", clientId),
-      Param("clientSecret", clientSecret),
+      Param("client_id", clientId),
+      Param("client_secret", clientSecret),
       Param("code", verifyCode.get),
       Param("grant_type", "authorization_code"),
-      Param("redirectUri", redirectUri.get),
+      Param("redirect_uri", redirectUri.get),
       Param("state", state))), endPointForAccessToken.verb)
     logVP(logger.info)("requestAccessToken processing finished", extractAccessToken(resp))
   }
 
-  def extractAccessToken(rawResp: Option[String]): Option[Token]
+  def extractAccessToken(rawResp: Option[String]): Option[Token] = responseExtractor.extractToken(rawResp)
 
   def requestOpenId_!(accessToken: String): Option[String] = None
   def requestUserInfo_!(accessToken: String, openId: String, apiKey: String): Option[User] = None

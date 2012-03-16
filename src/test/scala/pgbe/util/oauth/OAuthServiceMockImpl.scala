@@ -12,5 +12,4 @@ class OAuthServiceMockImpl extends CommonOAuthService {
   val state = "from_some_provider"
   var verifyCode: Option[String] = None
   var accessToken: Option[Token] = None
-  def extractAccessToken(rawResp: Option[String]): Option[Token] = None
 }

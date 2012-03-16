@@ -28,5 +28,4 @@ class QQService(val clientId: String, val clientSecret: String, val state: Strin
     this(clientId, clientSecret, "")
   }
 
-  def extractAccessToken(rawResp: Option[String]): Option[Token] = None
 }

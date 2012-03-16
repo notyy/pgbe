@@ -20,7 +20,7 @@ object Connector {
       val resp = EntityUtils.toString(new DefaultHttpClient().execute(sender).getEntity())
       if (resp == null || resp.isEmpty()) None else Some(resp)
     } catch {
-      case e: Exception => logV(logger.error)("failed to communicate with oauth server,when sending:\n" + reqURI, None)
+      case e: Exception => e.printStackTrace(); logV(logger.error)("failed to communicate with oauth server,when sending:\n" + reqURI, None)
     } finally {
       if (entity != null) EntityUtils.consume(entity)
     }
