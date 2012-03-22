@@ -86,7 +86,7 @@ class Comments {
   }
 
   def loginBlock(eId: Int): NodeSeq = {
-    val requestAuthUrl = oAuthRenew.makeAuthUrl
+    val requestAuthUrl = oAuthRenew.makeAuthUrl.get
     val loginBlock: NodeSeq = {
       <div><h4 class="alert alert-info">您必须登录后才能评论，本小站不敢劳您注册，请点击下面图标使用大公司的登录服务</h4></div> ++
         <div><span id="qqLoginBtn"></span><a href={ requestAuthUrl.toString() }><img src="../imgs/QQ_Connect_logo_7.png" alt="QQ登录 "/></a></div>
