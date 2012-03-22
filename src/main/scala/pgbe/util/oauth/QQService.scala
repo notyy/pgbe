@@ -67,7 +67,7 @@ class QQService(val clientId: String, val clientSecret: String, val redirectUri:
     def extractUserInfo(resp: String): Option[User] = {
       val UserInfoRegex = """.*"nickname":"(.*?)","figureurl":"(.*?)",.*?""".r
       StringUtil.compact(resp) match {
-        case UserInfoRegex(nickName, figureUrl) => Some(User("", nickName, figureUrl, None, None))
+        case UserInfoRegex(nickName, figureUrl) => Some(User("QQ", nickName, figureUrl, None, None))
         case _ => None
       }
     }
