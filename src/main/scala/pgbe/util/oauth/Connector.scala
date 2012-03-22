@@ -17,7 +17,7 @@ object Connector {
     }
     var entity: HttpEntity = null
     try {
-      val resp = EntityUtils.toString(new DefaultHttpClient().execute(sender).getEntity())
+      val resp = EntityUtils.toString(new DefaultHttpClient().execute(sender).getEntity(), "UTF-8")
       if (resp == null || resp.isEmpty()) None else Some(resp)
     } catch {
       case e: Exception => e.printStackTrace(); logV(logger.error)("failed to communicate with oauth server,when sending:\n" + reqURI, None)
