@@ -40,24 +40,28 @@ class OAuthRenew {
       Full(HTTPCookie(OPENID, Full(openId), _, _, _, _, _, _)),
       Full(HTTPCookie(TOKEN, Full(token), _, _, _, _, _, _)), _) => {
       //TODO: should test last login to choose qqService or other service
-      val user = qqService.requestUserInfo2_!(Token(token, 30000), UID(openId))
-      if (user.isEmpty) Empty
-      else renewQQUserInfo(user.get)
+      renewQQUserInfo(qqService.requestUserInfo2_!(Token(token, 30000), UID(openId)))
+
     }
-    case (Empty, Empty, Empty, Empty, Full(sCode)) => qqService.requestUserInfoAll_!(VerifyCode(sCode))
+    case (Empty, Empty, Empty, Empty, Full(sCode)) => {
+      renewQQUserInfo(qqService.requestUserInfoAll_!(VerifyCode(sCode)))
+    }
     case _ => Empty
   }
 
   def makeAuthUrl = qqService.makeAuthUrl
 
-  def renewQQUserInfo(user: User): Box[User] = {
-    userVar.set(Full(user))
-    setCookie_!(user.comeFrom, user.openId.get, user.accessToken.get)
-    Full(user)
+  def renewQQUserInfo(user: Option[User]): Box[User] = {
+    if (user.isEmpty) Empty
+    else {
+      userVar.set(Full(user.get))
+      setCookie_!(user.get.comeFrom, user.get.openId.get, user.get.accessToken.get)
+      Full(user.get)
+    }
   }
 
   def setCookie_!(loginFrom: String, openId: String, token: String) = {
-    val lastLoginFromCookie = HTTPCookie(LAST_LOGIN_FROM, state.getOrElse(""))
+    val lastLoginFromCookie = HTTPCookie(LAST_LOGIN_FROM, loginFrom)
     lastLoginFromCookie.setDomain(hostDomain)
     lastLoginFromCookie.setMaxAge(3600 * 24 * 7) //保留cookie一周
     val openIdCookie = HTTPCookie(OPENID, openId)
@@ -66,6 +70,7 @@ class OAuthRenew {
     val tokenCookie = HTTPCookie(TOKEN, token)
     openIdCookie.setDomain(hostDomain)
     openIdCookie.setMaxAge(3600 * 24 * 7) //保留cookie一周
+    S.addCookie(lastLoginFromCookie)
     S.addCookie(openIdCookie)
     S.addCookie(tokenCookie)
   }
