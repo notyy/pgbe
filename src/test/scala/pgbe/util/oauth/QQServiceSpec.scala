@@ -9,7 +9,7 @@ class QQServiceSpec extends FlatSpec with ShouldMatchers {
   val logger = LoggerFactory.getLogger(this.getClass())
   "QQService" should "be able to acquire user info after authorization code is got" in {
     // this is not unit test, it will connect to QQ OAuth2 provider
-    val shouldRun_? = true
+    val shouldRun_? = false
     if (shouldRun_?) {
       val properties = new Properties
       properties.load(this.getClass().getResourceAsStream("/test.properties"))
@@ -19,7 +19,7 @@ class QQServiceSpec extends FlatSpec with ShouldMatchers {
         properties.getProperty("apiKey"),
         properties.getProperty("apiSecret"),
         properties.getProperty("redirectUri"), None, None)
-      val user = qqService.requestUserInfoAll_!(VerifyCode("6E48E23EB5D6924AB03FABC39635FC49")) //input your auth code from step1
+      val user = qqService.requestUserInfoAll_!(VerifyCode("87F07F329EAF059B9280B9830F6A28A5")) //input your auth code from step1
       user should not be None
       user.get.nickName.isEmpty() should be === false
       user.get.figureUrl.isEmpty() should be === false
