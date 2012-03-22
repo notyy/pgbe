@@ -7,3 +7,6 @@
 /project/project/target
 /.settings
 /Commons
+/src/test/resources/test.properties.bak
+*.1
+*.log

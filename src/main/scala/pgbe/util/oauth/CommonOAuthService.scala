@@ -2,49 +2,48 @@ package pgbe.util.oauth
 import pgbe.util.LogUtil._
 import pgbe.util.oauth.model.User
 import org.slf4j.Logger
+import pgbe.util.CommonStructure._
 
-trait CommonOAuthService extends OAuthService {
+abstract trait CommonOAuthService extends OAuthService {
   // implementations should provide following vals
   val logger: Logger
+  lazy implicit val iLog = logger
   val endPointForAuthorizationCode: EndPoint
   val endPointForAccessToken: EndPoint
   val clientId: String
   val clientSecret: String
   val state: String
+  val redirectUri: String
   //TODO: scope field should be implemented later
-  // some thing that's vary
-  var redirectUri: Option[String]
-  var verifyCode: Option[String]
-  var accessToken: Option[Token]
 
-  def makeAuthUrl: String = {
+  def makeAuthUrl: Option[String] = {
     assert(!redirectUri.isEmpty)
     logger.info("making AuthUrl")
     val req = new Request(endPointForAuthorizationCode,
       Param("client_id", clientId),
-      Param("redirect_uri", redirectUri.get),
+      Param("redirect_uri", redirectUri),
       Param("response_type", "code"),
       Param("state", state))
-    logV(logger.info)("", OAuthRequestBuilder.build(req))
+    OAuthRequestBuilder.build(req)
   }
 
-  def requestAccessToken_! : Option[Token] = {
+  def requestAccessToken_! : VerifyCode => Option[Token] = { verifyCode =>
     assert(!clientId.isEmpty()); assert(!clientSecret.isEmpty());
-    assert(!verifyCode.isEmpty); assert(!state.isEmpty()); assert(!redirectUri.isEmpty)
-    val params = "requestAccessToken (endPoint:" + endPointForAccessToken + ",code:" + verifyCode + ",redirectUrl:" + redirectUri + ",state:" + state + ")"
-    logger.info(params)
-    val resp = connector.send_!(reqBuilder.build(Request(endPointForAccessToken,
+    assert(!verifyCode.code.isEmpty); assert(redirectUri != null); assert(state != null)
+    val req = Request(endPointForAccessToken,
       Param("client_id", clientId),
       Param("client_secret", clientSecret),
-      Param("code", verifyCode.get),
+      Param("code", verifyCode.code),
       Param("grant_type", "authorization_code"),
-      Param("redirect_uri", redirectUri.get),
-      Param("state", state))), endPointForAccessToken.verb)
-    logVP(logger.info)("requestAccessToken processing finished", extractAccessToken(resp))
+      Param("redirect_uri", redirectUri),
+      Param("state", state))
+    val impl = Do("building request to accessToken", reqBuilder.build) then
+      Do("connect and send request to " + endPointForAccessToken, connector.send_!(_: String, endPointForAccessToken.verb)) then
+      Do("extract accessToken from response", extractAccessToken)
+    impl(req)
   }
 
-  def extractAccessToken(rawResp: Option[String]): Option[Token] = responseExtractor.extractToken(rawResp)
+  private def extractAccessToken(rawResp: String): Option[Token] = responseExtractor.extractToken(rawResp)
 
-  def requestOpenId_!(accessToken: String): Option[String] = None
-  def requestUserInfo_!(accessToken: String, openId: String, apiKey: String): Option[User] = None
+  def requestUserInfoAll_! : VerifyCode => Option[User]
 }

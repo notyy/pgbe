@@ -18,7 +18,7 @@ class CommonOAuthServiceSpec extends FixtureFlatSpec with ShouldMatchers {
   "OAuth2 spec" should "Step1:generate a url so that user can jump to oauth2 provider and grant us authorization code" in
     { oauthService =>
       val rs = "https://provider.sample/authorize?client_id=clientId_01234&redirect_uri=http%3A%2F%2Fmysite.sample%2Fcallback&response_type=code&state=from_some_provider"
-      oauthService.makeAuthUrl should be === rs
+      oauthService.makeAuthUrl should be === Some(rs)
     }
 
   it should "Step2:request an access token when given verify code from previous step of oauth2  " in { oauthService =>

@@ -16,11 +16,14 @@ object Verb extends Enumeration {
 case class EndPoint(val scheme: String, val host: String, val path: String, val verb: Verb.Value)
 case class Param(name: String, value: String)
 case class Request(val endPoint: EndPoint, params: Param*)
+case class VerifyCode(val code: String)
 case class Token(val accessToken: String, val expire: Long)
+case class UID(val value: String)
 
 abstract trait OAuthService {
   val reqBuilder = OAuthRequestBuilder
   val connector = Connector
 
-  val responseExtractor = ResponseExtractor
+  object commonResponseExtractor extends CommonResponseExtractor
+  val responseExtractor = commonResponseExtractor
 }

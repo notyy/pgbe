@@ -15,7 +15,8 @@ object LogUtil {
   def logV[A](f: String => Unit)(s: String, x: A) = kestrel(x) { y => f(s + ": " + y) }
 
   /**
-   * this function only output s,doesn't output value x
+   * this function only output s,doesn't output value x <br/>
+   * used when value is secret and can't output to log
    * @param <A>
    * @param f
    * @param s

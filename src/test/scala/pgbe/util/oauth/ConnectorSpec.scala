@@ -28,7 +28,7 @@ class ConnectorSpec extends FlatSpec with ShouldMatchers {
         Param("redirect_uri", "http://kaopua.com"),
         Param("state", "fromQQ")))
       logger.info("calling url:\n" + authUrl)
-      logger.info("request sent....and got response:\n" + Connector.send_!(authUrl, Verb.GET))
+      logger.info("request sent....and got response:\n" + Connector.send_!(authUrl.get, Verb.GET))
     } else logger.info("connector test is skipped!")
   }
 }
